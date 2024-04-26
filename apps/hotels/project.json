@@ -1,0 +1,61 @@
+{
+  "name": "hotels",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/hotels/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/apps/hotels",
+        "format": ["cjs"],
+        "bundle": false,
+        "main": "apps/hotels/src/main.ts",
+        "tsConfig": "apps/hotels/tsconfig.app.json",
+        "assets": ["apps/hotels/src/assets"],
+        "generatePackageJson": true,
+        "esbuildOptions": {
+          "sourcemap": true,
+          "outExtension": {
+            ".js": ".js"
+          }
+        }
+      },
+      "configurations": {
+        "development": {},
+        "production": {
+          "generateLockfile": true,
+          "esbuildOptions": {
+            "sourcemap": false,
+            "outExtension": {
+              ".js": ".js"
+            }
+          }
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "hotels:build"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "hotels:build:development"
+        },
+        "production": {
+          "buildTarget": "hotels:build:production"
+        }
+      }
+    },
+    "docker-build": {
+      "dependsOn": ["build"],
+      "command": "docker build -f apps/hotels/Dockerfile . -t hotels"
+    }
+  }
+}
