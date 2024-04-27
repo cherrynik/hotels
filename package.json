@@ -5,10 +5,15 @@
   "scripts": {
     "start": "nx serve hotels"
   },
+  "engineStrict": true,
+  "engines": {
+    "node": "^20"
+  },
   "private": true,
   "dependencies": {
     "axios": "^1.6.0",
     "node-telegram-bot-api": "^0.65.1",
+    "nodemailer": "^6.9.13",
     "tslib": "^2.3.0"
   },
   "devDependencies": {
@@ -25,6 +30,7 @@
     "@types/jest": "^29.4.0",
     "@types/node": "~18.16.9",
     "@types/node-telegram-bot-api": "^0.64.6",
+    "@types/nodemailer": "^6.4.14",
     "@typescript-eslint/eslint-plugin": "^7.3.0",
     "@typescript-eslint/parser": "^7.3.0",
     "esbuild": "^0.19.2",
