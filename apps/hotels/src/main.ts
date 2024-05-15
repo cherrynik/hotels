@@ -8,10 +8,7 @@ import {
   isTextCommand,
   commands,
   steps,
-  users,
 } from './impls';
-import { logger } from 'nx/src/utils/logger';
-import { messages } from 'nx/src/utils/ab-testing';
 
 export const bot = createBot(env['TELEGRAM_API_KEY'] as string);
 
@@ -44,44 +41,11 @@ const main = async (message: Message) => {
 };
 
 bot.on('callback_query', (query) => {
-  if (query.data === '/done') {
-    bot
-      .sendMessage(
-        query.message.chat.id,
-        'Сейчас Вам необходимо пройти тест на знание правил этикета при общении с инвалидами по слуху. Пожалуйста, будьте внимательны.',
-        {
-          reply_markup: { remove_keyboard: true },
-        }
-      )
-      .then(async () => {
-        const message = await bot.sendPoll(
-          query.message.chat.id,
-          'Вопрос 1. Как правильно приветствовать гостя с ограничением по зрению?',
-          [
-            'Похлопать по плечу',
-            'Окликнуть гостя',
-            'Проигнорировать гостя, пока он сам не поздоровается',
-          ]
-        );
+  const chatId = query.message.chat.id;
+  if (query.data.startsWith('/done')) {
+    const params = new URLSearchParams(query.data.split('?')[1]);
 
-        const handle = (poll) => {
-          const votedFor = poll.options.find(
-            ({ voter_count }) => voter_count > 0
-          ).text;
-
-          mailer.sendMail({
-            from: 'Telegram Hilton <ighosta9@gmail.com>',
-            to: ['ighosta9@gmail.com', 'ne.yulyayulya@yandex.ru'],
-            subject: `Результаты тестирования (${users[message.chat.id]})`,
-            text: votedFor,
-          });
-
-          bot.sendMessage(message.chat.id, 'Тестирование завершено.')
-
-          bot.off('poll', handle);
-        };
-
-        bot.on('poll', handle);
-      });
+    steps[chatId] = Number(params.get('step'));
+    commands['default'](query.message);
   }
 });

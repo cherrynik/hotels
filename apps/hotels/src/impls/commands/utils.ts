@@ -1,5 +1,5 @@
-import { textCommands } from './constants';
-import { Command } from './types';
+import { steps, textCommands } from './constants';
+import { Command, Step } from './types';
 import { KeyboardButton, Message } from 'node-telegram-bot-api';
 import { bot } from '../../main';
 
@@ -29,4 +29,14 @@ export const setKeyboard = async (
       },
     }
   );
+};
+
+export const nextStep = (message: Message) => {
+  const chatId = message.chat.id;
+
+  steps[chatId] = steps[chatId] + 1 || Step.FirstTopic;
+
+  if (steps[chatId] >= Step.MAX) {
+    steps[chatId] = Step.FirstTopic;
+  }
 };
