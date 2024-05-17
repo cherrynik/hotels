@@ -4,10 +4,17 @@ export enum Command {
 
 export enum Step {
   FirstTopic,
-  FirstTopicTest,
+  FirstTopicTest1,
+  FirstTopicTest2,
+  FirstTopicTest3,
 
   SecondTopic,
-  SecondTopicTest,
+  SecondTopicTest1,
+  SecondTopicTest2,
+
+  ThirdTopic,
+  ThirdTopicTest1,
+  ThirdTopicTest2,
 
   Finish,
 

@@ -8,7 +8,11 @@ import {
   isTextCommand,
   commands,
   steps,
+  nextStep,
+  users,
+  polls,
 } from './impls';
+import { set } from 'lodash';
 
 export const bot = createBot(env['TELEGRAM_API_KEY'] as string);
 
@@ -43,9 +47,30 @@ const main = async (message: Message) => {
 bot.on('callback_query', (query) => {
   const chatId = query.message.chat.id;
   if (query.data.startsWith('/done')) {
+    void bot.editMessageReplyMarkup(null, {
+      inline_message_id: query.inline_message_id,
+      message_id: query.message.message_id,
+      chat_id: query.message.chat.id,
+    });
+
     const params = new URLSearchParams(query.data.split('?')[1]);
 
     steps[chatId] = Number(params.get('step'));
     commands['default'](query.message);
+  }
+});
+
+bot.on('poll', async (poll) => {
+  const message = polls[poll.id];
+  if (!message) {
+    return;
+  }
+
+  const chatId = message.chat.id;
+  if (users[chatId].activePoll === poll.id) {
+    const answer = poll.options.find(({ voter_count }) => voter_count > 0).text;
+    users[chatId][poll.question] = answer;
+    nextStep(message);
+    commands['default'](message);
   }
 });

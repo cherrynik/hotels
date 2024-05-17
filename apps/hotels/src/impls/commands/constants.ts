@@ -24,12 +24,17 @@ export const replies = {
 
 export const steps = {};
 export const users = {};
+export const polls = {};
 
 export const commands: {
   [key in Command | 'default']: (message: Message) => void;
 } = {
   [Command.Start]: (message) => {
-    nextStep(message);
+    const chatId = message.chat.id;
+    steps[chatId] = Step.FirstTopic;
+    if (users[chatId]?.activePoll) {
+      users[chatId].activePoll = undefined;
+    }
 
     void bot.sendMessage(message.chat.id, replies.greeting());
   },
@@ -44,7 +49,7 @@ const firstTopic = (message: Message) => {
 
   void bot.sendMessage(
     chatId,
-    `Тема 1: Правила этикета при общении с инвалидами по зрению.
+    `Тема 1: Правила этикета при общении с инвалидами по зрению и с инвалидами по слуху
 youtube.com/watch?v=StZcUAPRRac&ab_channel=RammsteinOfficial`,
     {
       reply_markup: {
@@ -56,7 +61,6 @@ youtube.com/watch?v=StZcUAPRRac&ab_channel=RammsteinOfficial`,
             },
           ],
         ],
-        is_persistent: true,
         one_time_keyboard: true,
         selective: true,
       },
@@ -64,7 +68,7 @@ youtube.com/watch?v=StZcUAPRRac&ab_channel=RammsteinOfficial`,
   );
 };
 
-const firstTopicTest = (message: Message) => {
+const firstTopicTest1 = (message: Message) => {
   const chatId = message.chat.id;
   bot
     .sendMessage(
@@ -75,30 +79,53 @@ const firstTopicTest = (message: Message) => {
       }
     )
     .then(async () => {
-      await bot.sendPoll(
+      const sentMessage = await bot.sendPoll(
         chatId,
-        'Вопрос 1. Как правильно приветствовать гостя с ограничением по зрению?',
+        'Вопрос 1. Что делать, если гость с нарушением слуха попросил повторить ваше сообщение?',
         [
-          'Похлопать по плечу',
-          'Окликнуть гостя',
-          'Проигнорировать гостя, пока он сам не поздоровается',
+          'Повысить голос и повторить сообщение.',
+          'Терпеливо и четко повторить сообщение, используя ясную артикуляцию.',
+          'Использовать жесты вместо повторения.',
         ]
       );
 
-      const handle = (poll: Poll) => {
-        const answer = poll.options.find(
-          ({ voter_count }) => voter_count > 0
-        ).text;
+      const pollId = sentMessage.poll.id;
+      users[chatId].activePoll = pollId;
+      polls[pollId] = message;
+    });
+};
 
-        set(users, `${chatId}.firstTopicTest`, answer);
+const firstTopicTest2 = (message: Message) => {
+  const chatId = message.chat.id;
+  bot
+    .sendPoll(
+      chatId,
+      'Вопрос 2. Какова лучшая практика при общении с гостем, который использует слуховой аппарат?',
+      [
+        'Говорить максимально громко.',
+        'Говорить чётко, используя нормальный тон и скорость.',
+        'Говорить медленно и переформулировать каждое предложение.',
+      ]
+    )
+    .then((sentMessage) => {
+      const pollId = sentMessage.poll.id;
+      users[chatId].activePoll = pollId;
+      polls[pollId] = message;
+    });
+};
 
-        nextStep(message);
-        commands['default'](message);
-
-        bot.off('poll', handle);
-      };
-
-      bot.on('poll', handle);
+const firstTopicTest3 = (message: Message) => {
+  const chatId = message.chat.id;
+  bot
+    .sendPoll(chatId, 'Вопрос 3. Как предложить помощь слепому гостю?', [
+      'Взять гостя за руку и вести его.',
+      'Спросить, нужна ли помощь, и если да, то как именно вы можете помочь.',
+      'Немедленно предоставить помощь, не спрашивая.',
+    ])
+    .then((sentMessage) => {
+      const pollId = sentMessage.poll.id;
+      users[chatId].activePoll = pollId;
+      polls[pollId] = message;
     });
 };
 
@@ -108,7 +135,7 @@ const secondTopic = (message: Message) => {
 
   void bot.sendMessage(
     chatId,
-    `Тема 2: XYZ
+    `Тема 2: Правила этикета при общении с инвалидами-колясочниками
 [...]`,
     {
       reply_markup: {
@@ -128,29 +155,105 @@ const secondTopic = (message: Message) => {
   );
 };
 
-const secondTopicTest = (message: Message) => {
+const secondTopicTest1 = (message: Message) => {
+  const chatId = message.chat.id;
+  void bot
+    .sendPoll(
+      chatId,
+      'Вопрос 1. Что делать, если вы не уверены, как обратиться к гостю с физической инвалидностью?',
+      [
+        'Спросить у коллеги в присутствии гостя.',
+        'Спросить у гостя напрямую, как ему будет комфортнее, чтобы к нему обращались.',
+        'Просто использовать любые обращения.',
+      ]
+    )
+    .then((sentMessage) => {
+      const pollId = sentMessage.poll.id;
+      users[chatId].activePoll = pollId;
+      polls[pollId] = message;
+    });
+};
+
+const secondTopicTest2 = (message: Message) => {
+  const chatId = message.chat.id;
+  void bot
+    .sendPoll(
+      chatId,
+      'Вопрос 2. Как следует реагировать, когда гость на инвалидной коляске самостоятельно подъезжает к ресепшн?',
+      [
+        'Немедленно подойти и предложить помощь.',
+        'Подождать, чтобы увидеть, запросит ли гость помощь.',
+        'Игнорировать, пока он сам не начнет разговор.',
+      ]
+    )
+    .then((sentMessage) => {
+      const pollId = sentMessage.poll.id;
+      users[chatId].activePoll = pollId;
+      polls[pollId] = message;
+    });
+};
+
+const thirdTopic = (message: Message) => {
+  const chatId = message.chat.id;
+  set(users, `${chatId}.fullName`, message.text);
+
+  void bot.sendMessage(
+    chatId,
+    `Тема 3: Правила этикета при общении с инвалидами с умственными нарушениями
+[...]`,
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: 'Готово',
+              callback_data: `/done?step=${steps[chatId] + 1}`,
+            },
+          ],
+        ],
+        is_persistent: true,
+        one_time_keyboard: true,
+        selective: true,
+      },
+    }
+  );
+};
+
+const thirdTopicTest1 = (message: Message) => {
   const chatId = message.chat.id;
   bot
-    .sendMessage(chatId, '2 test', {
-      reply_markup: { remove_keyboard: true },
-    })
-    .then(async () => {
-      await bot.sendPoll(chatId, 'Вопрос 2. XYZ?', ['1', '2', '3']);
+    .sendPoll(
+      chatId,
+      'Вопрос 1. Как поздороваться с гостем с умственной отсталостью?',
+      [
+        'Подойти и протянуть руку для рукопожатия.',
+        'Поздороваться словами и улыбнуться.',
+        'Дождаться, пока гость сам проявит инициативу для общения.',
+      ]
+    )
+    .then((sentMessage) => {
+      const pollId = sentMessage.poll.id;
+      users[chatId].activePoll = pollId;
+      polls[pollId] = message;
+    });
+};
 
-      const handle = (poll: Poll) => {
-        const answer = poll.options.find(
-          ({ voter_count }) => voter_count > 0
-        ).text;
-
-        set(users, `${chatId}.firstTopicTest`, answer);
-
-        nextStep(message);
-        commands['default'](message);
-
-        bot.off('poll', handle);
-      };
-
-      bot.on('poll', handle);
+const thirdTopicTest2 = (message: Message) => {
+  const chatId = message.chat.id;
+  bot
+    .sendPoll(
+      chatId,
+      'Вопрос 2. Как себя вести, если гость с умственной отсталостью ведёт себя агрессивно?',
+      [
+        'Оставаться спокойным и попытаться понять причину агрессии.',
+        'Не обращать внимания и продолжать общение как ни в чём не бывало.',
+        'Сразу же прекратить общение и сообщить о ситуации менеджеру.',
+      ]
+    )
+    .then((sentMessage) => {
+      const pollId = sentMessage.poll.id;
+      users[chatId].activePoll = pollId;
+      polls[pollId] = message;
     });
 };
 
@@ -167,9 +270,18 @@ export const handleSteps = (message: Message) => {
 
   const handle = {
     [Step.FirstTopic]: firstTopic,
-    [Step.FirstTopicTest]: firstTopicTest,
+    [Step.FirstTopicTest1]: firstTopicTest1,
+    [Step.FirstTopicTest2]: firstTopicTest2,
+    [Step.FirstTopicTest3]: firstTopicTest3,
+
     [Step.SecondTopic]: secondTopic,
-    [Step.SecondTopicTest]: secondTopicTest,
+    [Step.SecondTopicTest1]: secondTopicTest1,
+    [Step.SecondTopicTest2]: secondTopicTest2,
+
+    [Step.ThirdTopic]: thirdTopic,
+    [Step.ThirdTopicTest1]: thirdTopicTest1,
+    [Step.ThirdTopicTest2]: thirdTopicTest2,
+
     [Step.Finish]: finish,
   }[step];
 
