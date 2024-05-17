@@ -69,7 +69,10 @@ bot.on('poll', async (poll) => {
   const chatId = message.chat.id;
   if (users[chatId].activePoll === poll.id) {
     const answer = poll.options.find(({ voter_count }) => voter_count > 0).text;
-    users[chatId][poll.question] = answer;
+    users[chatId].answers = {
+      ...users[chatId].answers,
+      [poll.question]: answer,
+    };
     nextStep(message);
     commands['default'](message);
   }

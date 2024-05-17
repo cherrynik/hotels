@@ -4,6 +4,7 @@ import { bot } from '../../main';
 import { nextStep } from './utils';
 import { set } from 'lodash';
 import { mailer } from '../../bootstrap';
+import { env } from 'process';
 
 export const descriptions = {
   [Command.Start]: 'Запустить бота',
@@ -50,7 +51,7 @@ const firstTopic = (message: Message) => {
   void bot.sendMessage(
     chatId,
     `Тема 1: Правила этикета при общении с инвалидами по зрению и с инвалидами по слуху
-youtube.com/watch?v=StZcUAPRRac&ab_channel=RammsteinOfficial`,
+youtu.be/PohzTolYe1s`,
     {
       reply_markup: {
         inline_keyboard: [
@@ -131,12 +132,11 @@ const firstTopicTest3 = (message: Message) => {
 
 const secondTopic = (message: Message) => {
   const chatId = message.chat.id;
-  set(users, `${chatId}.fullName`, message.text);
 
   void bot.sendMessage(
     chatId,
     `Тема 2: Правила этикета при общении с инвалидами-колясочниками
-[...]`,
+youtu.be/NW42NwDeIFg`,
     {
       reply_markup: {
         inline_keyboard: [
@@ -179,7 +179,7 @@ const secondTopicTest2 = (message: Message) => {
   void bot
     .sendPoll(
       chatId,
-      'Вопрос 2. Как следует реагировать, когда гость на инвалидной коляске самостоятельно подъезжает к ресепшн?',
+      'Вопрос 2. Как следует реагировать, когда гость на инвалидной коляске самостоятельно подъезжает к ресепшну?',
       [
         'Немедленно подойти и предложить помощь.',
         'Подождать, чтобы увидеть, запросит ли гость помощь.',
@@ -195,12 +195,11 @@ const secondTopicTest2 = (message: Message) => {
 
 const thirdTopic = (message: Message) => {
   const chatId = message.chat.id;
-  set(users, `${chatId}.fullName`, message.text);
 
   void bot.sendMessage(
     chatId,
     `Тема 3: Правила этикета при общении с инвалидами с умственными нарушениями
-[...]`,
+youtu.be/SqdZD_DyzTo`,
     {
       reply_markup: {
         inline_keyboard: [
@@ -259,9 +258,24 @@ const thirdTopicTest2 = (message: Message) => {
 
 const finish = (message: Message) => {
   const chatId = message.chat.id;
-  set(users, `${chatId}.fullName`, message.text);
 
-  void bot.sendMessage(chatId, `Thank you.`);
+  void bot.sendMessage(chatId, `Спасибо, что становитесь лучше.`);
+
+  const receivers = env['MAIL_RECEIVERS'].split(',');
+  const text = Object.entries(users[chatId].answers)
+    .map(([question, answer], i) => {
+      const questionFormatted = question.split('.')[1].trim();
+      return `${i + 1}. ${questionFormatted}
+- ${answer}`;
+    })
+    .join('\n');
+
+  void mailer.sendMail({
+    from: 'Telegram Hilton <ighosta9@gmail.com>',
+    to: receivers,
+    subject: `Результаты тестирования (${users[chatId].fullName})`,
+    text
+  });
 };
 
 export const handleSteps = (message: Message) => {
